@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Happy Birthday</title>
+    <script src="/src/index.jsx" type="module"></script>
     <style>
       #coordinates {
         position: absolute;
@@ -41,23 +42,5 @@
   </head>
   <body>
     <audio id="bg-music" src="/hbd.mp3" loop></audio>
-    <button id="start-btn">Start the Celebration!</button>
-    <script>
-      document.getElementById('start-btn').addEventListener('click', function () {
-        const audio = document.getElementById('bg-music');
-        audio.play();
-        // Dynamically load index.jsx after play
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.src = '/src/index.jsx';
-        document.body.appendChild(script);
-        // Hide the button
-        this.style.display = 'none';
-        setTimeout(() => {
-          audio.pause();
-          audio.currentTime = 0;
-        }, 18000);
-      });
-    </script>
   </body>
 </html>
