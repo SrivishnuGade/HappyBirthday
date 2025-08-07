@@ -11,11 +11,7 @@ function startCelebration() {
   // Hide the button
   document.getElementById('start-btn').style.display = 'none';
 
-  // Stop music after 30 seconds
-  setTimeout(() => {
-    audio.pause();
-    audio.currentTime = 0;
-  }, 18000);
+
 }
 
 // Create button and audio in JS
