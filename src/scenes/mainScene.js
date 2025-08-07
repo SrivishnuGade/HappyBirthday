@@ -113,15 +113,15 @@ controls.enabled = false; // Disable controls
 
 // Animate camera across each line with 4 seconds wait between
 async function animateCameraSequence() {
-  moveCameraAcrossLine(camera, 3*totalHeight / 2, totalHeight / 2, 400, 2);
+  moveCameraAcrossLine(camera, 30*totalHeight / 4, totalHeight / 2, totalHeight*3, 2);
   await new Promise(res => setTimeout(res, 2000));
-  moveCameraToNextLine(camera, -2.3*totalHeight/2, 0, 400, 1);
+  moveCameraToNextLine(camera, -27*totalHeight/4, 0, totalHeight*5, 1);
   await new Promise(res => setTimeout(res, 1000));
-  moveCameraAcrossLine(camera, 2.3*totalHeight, 0, 400, 3);
+  moveCameraAcrossLine(camera, 27*totalHeight/2, 0, totalHeight*5, 3);
   await new Promise(res => setTimeout(res, 3000));
-  moveCameraToNextLine(camera, -1.5 * totalHeight/2, -totalHeight / 2, 400, 1);
+  moveCameraToNextLine(camera, -15 * totalHeight/4, -totalHeight / 2, totalHeight*3, 1);
   await new Promise(res => setTimeout(res, 1000));
-  moveCameraAcrossLine(camera, 1.5 * totalHeight, -totalHeight / 2, 400, 2);
+  moveCameraAcrossLine(camera, 15 * totalHeight/2, -totalHeight / 2, totalHeight*3, 2);
   await new Promise(res => setTimeout(res, 2000));
   controls.enabled = true; // Re-enable controls after animation
   controls.reset(); // Reset controls to initial position

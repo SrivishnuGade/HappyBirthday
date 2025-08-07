@@ -9,7 +9,7 @@ export function moveCameraAcrossLine(camera, lineWidth, y, z = camera.position.z
     x: lineWidth / 2,
     duration: duration,
     ease: "power2.inOut",
-    onUpdate: () => camera.lookAt(0, y, -800)
+    onUpdate: () => camera.lookAt(0, y, -20)
   });
 }
 
@@ -20,6 +20,6 @@ export function moveCameraToNextLine(camera, x,y, z = camera.position.z, duratio
     z: z,
     duration: duration,
     ease: "power2.inOut",
-    onUpdate: () => camera.lookAt(0,  camera.position.y, -800)
+    onUpdate: () => camera.lookAt(0,  camera.position.y, -20)
   });
 }
