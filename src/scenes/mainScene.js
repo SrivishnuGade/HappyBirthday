@@ -6,6 +6,7 @@ import { initGround } from '../environment/ground.js';
 import { initSky } from '../environment/sky.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { gsap } from 'gsap';
 import { moveCameraAcrossLine, moveCameraToNextLine} from '../movements/cameraMovements.js';
 
 const scene = new THREE.Scene();
@@ -124,8 +125,21 @@ async function animateCameraSequence() {
   moveCameraAcrossLine(camera, 15 * totalHeight/2, -totalHeight / 2, totalHeight*3, 2);
   await new Promise(res => setTimeout(res, 2000));
   controls.enabled = true; // Re-enable controls after animation
-  controls.reset(); // Reset controls to initial position
-  camera.position.set(0, 0, 700); // Reset camera position
+  gsap.to(camera.position, {
+    x: 0,
+    y: 0,
+    z: 700,
+    duration: 2,
+    ease: "power2.inOut",
+    onUpdate: () => {
+      camera.lookAt(0, 0, 0);
+      controls.update();
+    },
+    onComplete: () => {
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+  });
 }
 
 animateCameraSequence();

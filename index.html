@@ -1,13 +1,9 @@
-<!-- This is the main HTML file that will be served to the client.
- It contains a div element with the id root, which is where the React app will be mounted.
- It also contains a div element with the id map, which will be used to display the map. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Happy Birthday</title>
-    <script type="module" src="/src/index.jsx" defer></script>
     <style>
       #coordinates {
         position: absolute;
@@ -19,8 +15,49 @@
         border-radius: 5px;
         font-size: 36px;
       }
+      #start-btn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2.2rem;
+        padding: 1.2rem 3rem;
+        background: linear-gradient(90deg, #ff1744 0%, #ff9100 100%);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        z-index: 1000;
+        box-shadow: 0 8px 24px rgba(255, 23, 68, 0.2), 0 1.5px 6px rgba(0,0,0,0.08);
+        letter-spacing: 2px;
+        font-weight: bold;
+        transition: background 0.3s, transform 0.2s;
+      }
+      #start-btn:hover {
+        background: linear-gradient(90deg, #ff9100 0%, #ff1744 100%);
+        transform: translate(-50%, -50%) scale(1.05);
+      }
     </style> 
   </head>
   <body>
+    <audio id="bg-music" src="/hbd.mp3" loop></audio>
+    <button id="start-btn">Start the Celebration!</button>
+    <script>
+      document.getElementById('start-btn').addEventListener('click', function () {
+        const audio = document.getElementById('bg-music');
+        audio.play();
+        // Dynamically load index.jsx after play
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/src/index.jsx';
+        document.body.appendChild(script);
+        // Hide the button
+        this.style.display = 'none';
+        setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }, 18000);
+      });
+    </script>
   </body>
 </html>
