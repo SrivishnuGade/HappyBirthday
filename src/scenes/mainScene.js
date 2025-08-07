@@ -6,7 +6,7 @@ import { initGround } from '../environment/ground.js';
 import { initSky } from '../environment/sky.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import { moveCameraAcrossLine } from '../movements/cameraMovements.js';
+import { moveCameraAcrossLine, moveCameraToNextLine} from '../movements/cameraMovements.js';
 
 const scene = new THREE.Scene();
 initFog(scene);
@@ -32,7 +32,7 @@ controls.minAzimuthAngle = -Math.PI / 2+0.1; // -45 degrees
 controls.maxAzimuthAngle = Math.PI / 2-0.1;  // +45 degrees
 controls.enableDamping = true;
 controls.dampingFactor = 0.1;
-controls.target.set(0, 0, 0);
+// controls.target.set(0, -45, 0);
 
 initLighting(scene);
 // initGround(scene);
@@ -40,69 +40,99 @@ initSky(scene);
 
 let textMeshes = [];
 
-function createResponsiveText() {
+function loadFontAsync(url) {
+  return new Promise((resolve, reject) => {
+    const fontLoader = new FontLoader();
+    fontLoader.load(url, resolve, undefined, reject);
+  });
+}
+
+async function createResponsiveText() {
   // Remove old text meshes
   textMeshes.forEach(mesh => scene.remove(mesh));
   textMeshes = [];
 
-  const fontLoader = new FontLoader();
-  fontLoader.load('https://unpkg.com/three@0.169.0/examples/fonts/gentilis_bold.typeface.json', function (font) {
-    const words = ['HAPPY', 'BIRTHDAY', 'DADDY!'];
+  const font = await loadFontAsync('https://unpkg.com/three@0.169.0/examples/fonts/gentilis_bold.typeface.json');
+  const words = ['HAPPY', 'BIRTHDAY', 'DADDY!'];
 
-    // Calculate base font size and gap based on viewport height
-    const minDimension = Math.min(window.innerWidth, window.innerHeight);
-    let size = Math.max(12, minDimension / 15);
-    height = size * 0.2;
-    gap = size * 1.5;
+  // Calculate base font size and gap based on viewport height
+  const minDimension = Math.min(window.innerWidth, window.innerHeight);
+  let size = Math.max(12, minDimension / 15);
+  height = size * 0.2;
+  gap = size * 1.5;
 
-    // 1. Find the widest word in world units
-    let maxWidth = 0;
-    const geometries = words.map(word => {
-      const geo = new TextGeometry(word, {
-        font: font,
-        size: size,
-        height: height,
-        curveSegments: 16,
-        bevelEnabled: true,
-        bevelThickness: 2,
-        bevelSize: 2,
-        bevelOffset: 0,
-        bevelSegments: 8,
-      });
-      geo.computeBoundingBox();
-      const width = geo.boundingBox.max.x - geo.boundingBox.min.x;
-      if (width > maxWidth) maxWidth = width;
-      return geo;
+  // 1. Find the widest word in world units
+  let maxWidth = 0;
+  const geometries = words.map(word => {
+    const geo = new TextGeometry(word, {
+      font: font,
+      size: size,
+      depth: height,
+      curveSegments: 16,
+      bevelEnabled: true,
+      bevelThickness: 2,
+      bevelSize: 2,
+      bevelOffset: 0,
+      bevelSegments: 8,
     });
-
-    // 2. Compute target width in world units (e.g., 80% of camera frustum width at z=0)
-    const vFOV = THREE.MathUtils.degToRad(camera.fov); // vertical fov in radians
-    const camDist = Math.abs(camera.position.z); // distance from camera to text
-    const frustumHeight = 2 * Math.tan(vFOV / 2) * camDist;
-    const frustumWidth = frustumHeight * camera.aspect;
-    const targetWidth = frustumWidth * 0.8;
-
-    // 3. Calculate scale factor to fit the widest word
-    scale = maxWidth > targetWidth ? targetWidth / maxWidth : 1;
-
-    // 4. Place and add text meshes
-    totalHeight = (words.length - 1) * gap * scale;
-    geometries.forEach((geo, i) => {
-      geo.center();
-      const material = new THREE.MeshPhongMaterial({
-        color: 0xff1744,
-        shininess: 150,
-        specular: 0xffffff,
-        emissive: 0x330000,
-      });
-      const mesh = new THREE.Mesh(geo, material);
-      mesh.scale.set(scale, scale, scale);
-      mesh.position.set(0, totalHeight / 2 - i * gap * scale, 0);
-      mesh.castShadow = true;
-      scene.add(mesh);
-      textMeshes.push(mesh);
-    });
+    geo.computeBoundingBox();
+    const width = geo.boundingBox.max.x - geo.boundingBox.min.x;
+    if (width > maxWidth) maxWidth = width;
+    return geo;
   });
+
+  // 2. Compute target width in world units (e.g., 80% of camera frustum width at z=0)
+  const vFOV = THREE.MathUtils.degToRad(camera.fov); // vertical fov in radians
+  const camDist = Math.abs(camera.position.z); // distance from camera to text
+  const frustumHeight = 2 * Math.tan(vFOV / 2) * camDist;
+  const frustumWidth = frustumHeight * camera.aspect;
+  const targetWidth = frustumWidth * 0.8;
+
+  // 3. Calculate scale factor to fit the widest word
+  scale = maxWidth > targetWidth ? targetWidth / maxWidth : 1;
+
+  // 4. Place and add text meshes
+  totalHeight = (words.length - 1) * gap * scale;
+  geometries.forEach((geo, i) => {
+    geo.center();
+    const material = new THREE.MeshPhongMaterial({
+      color: 0xff1744,
+      shininess: 150,
+      specular: 0xffffff,
+      emissive: 0x330000,
+    });
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.scale.set(scale, scale, scale);
+    mesh.position.set(0, totalHeight / 2 - i * gap * scale, 0);
+    mesh.castShadow = true;
+    scene.add(mesh);
+    textMeshes.push(mesh);
+    console.log(mesh.position);
+  });
+controls.enabled = false; // Disable controls
+
+// Animate camera across each line with 4 seconds wait between
+async function animateCameraSequence() {
+  moveCameraAcrossLine(camera, 3*totalHeight / 2, totalHeight / 2, 400, 2);
+  await new Promise(res => setTimeout(res, 2000));
+  moveCameraToNextLine(camera, -2.3*totalHeight/2, 0, 400, 1);
+  await new Promise(res => setTimeout(res, 1000));
+  moveCameraAcrossLine(camera, 2.3*totalHeight, 0, 400, 3);
+  await new Promise(res => setTimeout(res, 3000));
+  moveCameraToNextLine(camera, -1.5 * totalHeight/2, -totalHeight / 2, 400, 1);
+  await new Promise(res => setTimeout(res, 1000));
+  moveCameraAcrossLine(camera, 1.5 * totalHeight, -totalHeight / 2, 400, 2);
+  await new Promise(res => setTimeout(res, 2000));
+  controls.enabled = true; // Re-enable controls after animation
+  controls.reset(); // Reset controls to initial position
+  camera.position.set(0, 0, 700); // Reset camera position
+}
+
+animateCameraSequence();
+
+console.log(`Total height of text: ${totalHeight}`);
+console.log(`Scale factor applied: ${scale}`);
+console.log(`Gap between words: ${gap}`);
 }
 
 // Initial creation
